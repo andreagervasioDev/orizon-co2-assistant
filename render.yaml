@@ -1,0 +1,19 @@
+# Blueprint Render per il backend Orizon (https://render.com/docs/blueprint-spec)
+# Il frontend va invece su Netlify (vedi README).
+services:
+  - type: web
+    name: orizon-backend
+    runtime: docker
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false # da impostare nella dashboard Render
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: ECOFREIGHT_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false # es. https://orizon-co2.netlify.app
