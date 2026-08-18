@@ -1,0 +1,4 @@
+.env
+database/*.sqlite
+database/*.sqlite-journal
+vendor/
