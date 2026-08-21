@@ -97,6 +97,10 @@ class ChatService
 
         $result = $this->ecoFreight->calculate($transportMode, $weightKg, $origin, $destination);
 
+        if (!$result['ok']) {
+            error_log('[orizon] EcoFreight tool error: ' . ($result['error'] ?? 'errore sconosciuto'));
+        }
+
         $tripSummary = null;
         if ($result['ok']) {
             $co2Kg = $this->extractCo2Kg($result['data']);
