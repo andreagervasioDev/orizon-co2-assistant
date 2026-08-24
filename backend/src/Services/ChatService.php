@@ -74,7 +74,16 @@ class ChatService
             }
         }
 
-        throw new RuntimeException('Numero massimo di chiamate agli strumenti superato.');
+        // Il modello ha continuato a chiamare il tool oltre il limite: degradiamo con
+        // grazia invece di far fallire il turno con un 502, che l'utente vedrebbe come
+        // un errore server per un dettaglio interno (loop di function calling).
+        error_log("[orizon] Limite di $i chiamate al tool superato per la conversazione $conversationId.");
+
+        $reply = 'Mi dispiace, non sono riuscito a completare il calcolo delle emissioni di CO2. '
+            . 'Prova a riformulare la richiesta o riprova tra qualche minuto.';
+        $this->repository->addMessage($conversationId, 'assistant', $reply);
+
+        return ['reply' => $reply, 'trip_summary' => $tripSummary];
     }
 
     /**
@@ -103,7 +112,10 @@ class ChatService
 
         $tripSummary = null;
         if ($result['ok']) {
-            $co2Kg = $this->extractCo2Kg($result['data']);
+            $co2Kg = self::extractCo2Kg($result['data']);
+            if ($co2Kg === null) {
+                error_log('[orizon] impossibile estrarre co2_kg dalla risposta EcoFreight: ' . json_encode($result['data']));
+            }
             $tripSummary = [
                 'transport_mode' => $transportMode,
                 'weight_kg' => $result['request']['weight_kg'],
@@ -116,7 +128,12 @@ class ChatService
         return ['content' => $result, 'trip_summary' => $tripSummary];
     }
 
-    private function extractCo2Kg(array $data): ?float
+    /**
+     * Logica pura, senza I/O: dato il JSON di risposta di EcoFreight, prova a
+     * estrarre il totale delle emissioni. Visibilità public static per essere
+     * testabile in isolamento (vedi tests/ExtractCo2KgTest.php).
+     */
+    public static function extractCo2Kg(array $data): ?float
     {
         $emissions = $data['emissions'] ?? null;
         if (!is_array($emissions)) {

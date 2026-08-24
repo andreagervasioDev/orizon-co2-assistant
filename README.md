@@ -53,6 +53,8 @@ Richiede PHP 8.1+ con estensione `pdo_sqlite` (inclusa di default nella maggior 
    ```
 3. Verifica: `curl http://localhost:8000/api/health` deve rispondere `{"status":"ok"}`
 
+**Test**: `php backend/tests/run.php` — copre la logica pura (senza I/O) di `ChatService::extractCo2Kg` e `EcoFreightClient::resolveMode`/`normalizeWeight`. Runner minimale scritto a mano, niente PHPUnit/Composer (coerente con la scelta "PHP puro" del progetto).
+
 Il database SQLite (`backend/database/data.sqlite`) viene creato automaticamente al primo avvio.
 
 ### Frontend
@@ -90,6 +92,8 @@ backend/
     Prompts/SystemPrompt.php     # system prompt e definizione del tool
     Core/Database.php            # connessione PDO SQLite
     Http/JsonResponse.php        # helper risposta JSON
+    Http/RateLimiter.php         # rate limit minimo per IP
+  tests/                        # test runner + test della logica pura (vedi sezione Test)
   schema.sql
   Dockerfile
 frontend/
@@ -112,3 +116,10 @@ frontend/
 | `GET` | `/api/health` | — | `{"status": "ok"}` |
 
 Lo storico è limitato alle **ultime 30 conversazioni**: alla creazione di una nuova chat, le più vecchie oltre il limite vengono eliminate automaticamente (messaggi inclusi).
+
+## Limiti noti
+
+- **Nessuna autenticazione**: `/api/chat` e `/api/conversations` sono pubblici. Chiunque conosca l'URL del backend può usarli — va bene per una demo, non per un'esposizione pubblica prolungata senza controllo dei costi.
+- **Rate limit minimo per IP** (`App\Http\RateLimiter`): max 10 richieste/minuto per IP su `/api/chat`, oltre risponde `429`. Protegge dall'abuso banale da un singolo host (script/loop), **non** da un attacker distribuito su più IP — non è un sostituto di un vero sistema di autenticazione/quota se il progetto va oltre la fase demo.
+- **CORS (`ALLOWED_ORIGIN`) non è una misura di sicurezza contro l'abuso**: blocca solo le chiamate da JavaScript eseguito in un browser su un'origine diversa. Non impedisce a uno script, `curl` o un bot di chiamare direttamente l'API.
+- **SQLite su Render (piano free) è effimero**: si perde ad ogni redeploy/riavvio (vedi sopra).

@@ -31,6 +31,42 @@ class EcoFreightClient
     }
 
     /**
+     * Logica pura, senza I/O: mappa il mezzo di trasporto (linguaggio naturale)
+     * sui valori richiesti da EcoFreight, o null se non è supportato. Visibilità
+     * public static per essere testabile in isolamento (vedi tests/EcoFreightClientTest.php).
+     */
+    public static function resolveMode(string $transportMode): ?array
+    {
+        return self::MODE_MAP[$transportMode] ?? null;
+    }
+
+    /**
+     * Logica pura, senza I/O: applica il peso minimo richiesto da EcoFreight
+     * (50kg), segnalando in una nota se è stato necessario alzare il peso
+     * indicato dall'utente. Visibilità public static per essere testabile
+     * in isolamento (vedi tests/EcoFreightClientTest.php).
+     *
+     * @return array{weight: float, note: ?string}
+     */
+    public static function normalizeWeight(float $weightKg): array
+    {
+        if ($weightKg >= self::MIN_WEIGHT_KG) {
+            return ['weight' => $weightKg, 'note' => null];
+        }
+
+        return [
+            'weight' => (float) self::MIN_WEIGHT_KG,
+            'note' => sprintf(
+                'Il peso indicato (%.1f kg) è sotto la soglia minima gestita dal servizio di calcolo (%d kg): '
+                . 'il calcolo è stato effettuato usando %d kg come base.',
+                $weightKg,
+                self::MIN_WEIGHT_KG,
+                self::MIN_WEIGHT_KG
+            ),
+        ];
+    }
+
+    /**
      * Esegue la chiamata di calcolo emissioni.
      *
      * @return array{ok: bool, data?: array, error?: string, weight_note?: string}
@@ -41,23 +77,14 @@ class EcoFreightClient
             return ['ok' => false, 'error' => 'ECOFREIGHT_API_KEY non configurata sul server.'];
         }
 
-        $mapping = self::MODE_MAP[$transportMode] ?? null;
+        $mapping = self::resolveMode($transportMode);
         if ($mapping === null) {
             return ['ok' => false, 'error' => "Mezzo di trasporto non supportato: $transportMode"];
         }
 
-        $weightNote = null;
-        $effectiveWeight = $weightKg;
-        if ($effectiveWeight < self::MIN_WEIGHT_KG) {
-            $effectiveWeight = self::MIN_WEIGHT_KG;
-            $weightNote = sprintf(
-                'Il peso indicato (%.1f kg) è sotto la soglia minima gestita dal servizio di calcolo (%d kg): '
-                . 'il calcolo è stato effettuato usando %d kg come base.',
-                $weightKg,
-                self::MIN_WEIGHT_KG,
-                self::MIN_WEIGHT_KG
-            );
-        }
+        $normalized = self::normalizeWeight($weightKg);
+        $effectiveWeight = $normalized['weight'];
+        $weightNote = $normalized['note'];
 
         $payload = [
             'origin' => ['query' => $origin],

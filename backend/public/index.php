@@ -20,6 +20,7 @@ use App\Controllers\ConversationsController;
 use App\Controllers\HealthController;
 use App\Core\Database;
 use App\Http\JsonResponse;
+use App\Http\RateLimiter;
 use App\Repositories\ConversationRepository;
 
 // ---------------------------------------------------------------------------
@@ -65,7 +66,7 @@ try {
     $repository = fn (): ConversationRepository => new ConversationRepository(Database::connection());
 
     if ($method === 'POST' && $path === '/api/chat') {
-        (new ChatController($repository()))->chat();
+        (new ChatController($repository(), new RateLimiter(Database::connection())))->chat();
     }
 
     if ($method === 'GET' && $path === '/api/conversations') {

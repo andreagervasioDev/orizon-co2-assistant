@@ -22,7 +22,7 @@ class Database
 
         $dir = dirname($path);
         if (!is_dir($dir)) {
-            mkdir($dir, 0777, true);
+            mkdir($dir, 0755, true);
         }
 
         $pdo = new PDO('sqlite:' . $path);

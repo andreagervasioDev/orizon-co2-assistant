@@ -16,3 +16,67 @@ body {
     -apple-system,
     sans-serif;
 }
+
+.markdown-content > *:first-child {
+  margin-top: 0;
+}
+.markdown-content > *:last-child {
+  margin-bottom: 0;
+}
+.markdown-content p {
+  margin: 0 0 0.6em;
+}
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0 0 0.6em;
+  padding-left: 1.25em;
+}
+.markdown-content ul {
+  list-style: disc;
+}
+.markdown-content ol {
+  list-style: decimal;
+}
+.markdown-content li {
+  margin: 0.15em 0;
+}
+.markdown-content strong {
+  font-weight: 600;
+}
+.markdown-content a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.markdown-content code {
+  background: rgb(0 0 0 / 6%);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25em;
+  font-size: 0.85em;
+}
+.markdown-content pre {
+  background: rgb(0 0 0 / 6%);
+  padding: 0.6em 0.8em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin: 0 0 0.6em;
+}
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+}
+.markdown-content blockquote {
+  border-left: 3px solid currentColor;
+  opacity: 0.85;
+  padding-left: 0.75em;
+  margin: 0 0 0.6em;
+}
+.markdown-content table {
+  border-collapse: collapse;
+  margin: 0 0 0.6em;
+}
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid rgb(0 0 0 / 12%);
+  padding: 0.25em 0.5em;
+}
